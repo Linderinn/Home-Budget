@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="translated-ltr">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Mój manager finansów</title>
+  <meta name="description" content="" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.0.5/dist/vuetify.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link type="text/css" href="my-styles.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app"></div>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.0.5/dist/vuetify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+  <script type="text/x-template" id="app-template">
+    <v-app>
+      <template v-slot:title>
+        Title
+      </template>
+      <v-app-bar
+        color="teriary"
+        v-if="$vuetify.display.mobile"
+      >
+      <v-app-bar-nav-icon  @click.stop="drawer = !drawer">
+        <span class="material-icons">menu</span>
+      </v-app-bar-nav-icon>
+      </v-app-bar>
+
+      <v-navigation-drawer
+        v-model="drawer"
+        location="top"
+        temporary
+      >
+      <ul class="nav-mobile">
+        <li class="nav__item">
+          <a href="#">
+              Panel
+          </a>
+        </li>
+        <li class="nav__item">
+          <a href="#summary_box">
+              Raporty
+          </a>
+        </li>
+        <li class="nav__item">
+          <a href="#expenses_box">
+              Wydatki
+          </a>
+        </li>
+        <li class="nav__item">
+          <a href="#tasks">
+              Ustawienia
+          </a>
+        </li>
+        <li class="nav__item">
+            <a href="#">
+              Profil
+          </a>
+        </li>
+        <li class="nav__item">
+          <a href="#goog-gt-tt">
+              Wyloguj
+          </a>
+        </li>
+      </ul>
+      </v-navigation-drawer>
+
+      <v-app-bar v-if="!$vuetify.display.mobile">
+        <nav>
+          <ul class="nav">
+            <li class="nav__item">
+              <a href=" ">
+                  Panel
+              </a>
+            </li>
+            <li class="nav__item">
+              <a href="#summary_box">
+                  Raporty
+              </a>
+            </li>
+            <li class="nav__item">
+              <a href="#expenses_box"> 
+                  Wydatki
+              </a>
+            </li>
+            <li class="nav__item">
+              <a href="#tasks">
+                  Ustawienia
+              </a>
+            </li>
+            <li class="nav__item">
+              <a href=" ">
+                  Profil
+              </a>
+            </li>
+            <li class="nav__item">
+              <a href="#goog-gt-tt">
+                  Wyloguj
+              </a>
+            </li>
+          </ul>
+        </nav>
+    
+      </v-app-bar>
+
+      <v-main>
+        <v-container>
+          <section id="landing-section">
+            <v-row>
+              <v-col class="title-col" :cols="$vuetify.display.mobile ? 12 : 6">
+                <div class="text-center text-title">Twój Portfel Domowy <br>Panel Raportów</div>
+                <div class="text-center animation-container">
+                  <p class="animated-text">Buduj swoją świadomość finansową razem z nami!</p> 
+                  <div class="title-br"></div>
+                  <a href="#filters">
+                    <div class="home-landing__scroll">
+                      <v-img src="\images\ScrollDown.svg" alt="Scroll Icon" class="home-landing__scroll-icon"></v-img>
+                    </div>
+                  </a>
+              </div>
+              </v-col>
+              <v-col v-if="!$vuetify.display.mobile" cols="6">
+                <v-img src="\images\money_report.svg" class="image"></v-img>
+              </v-col>
+            </v-row>
+          </section>
+
+          <section id="filters">
+          <v-row class="mt-5 pt-5">
+            <v-col :cols="$vuetify.display.mobile ? 12 : 3">
+              <v-text-field v-model="filters.dateFrom" type="date" label="Okres od" variant="underlined"></v-text-field>
+            </v-col>
+            <v-col :cols="$vuetify.display.mobile ? 12 : 3">
+              <v-text-field v-model="filters.dateTo" type="date" label="Okres do" variant="underlined"></v-text-field>
+            </v-col>
+            <v-col :cols="$vuetify.display.mobile ? 12 : 3">
+              <v-select label="Kategoria" :items="categories" v-model="filters.category" variant="underlined"></v-select>
+            </v-col>
+            <v-col :cols="$vuetify.display.mobile ? 12 : 3">
+              <v-text-field v-model="filters.name" label="Nazwa" variant="underlined"></v-text-field>
+            </v-col>
+          </v-row>
+        </section>
+        <section id="data-table-main">
+        <v-row>
+          <v-col cols="12">
+              <v-card variant="">
+                <v-card-title></v-card-title>
+                <v-card-text>
+                  <v-table class="v-table">
+                    <thead>
+                      <tr>
+                        <th class="text-left" v-for="header in headers" :key="header.value">
+                          {{ header }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in filteredData" :key="item.name">
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.date }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.price.value }} {{ item.price.currency }}</td>
+                      </tr>
+                      <tr>
+                        <td class="razem" colspan="4"><strong>Razem: {{ totalAmount() }} zł</strong></td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+                </v-card-text>
+                <v-card-action>
+                  <v-pagination class="pagination mb-2" v-model="filters.currentPage" :length="pages"></v-pagination>
+                </v-card-action>
+              </v-card>
+          </v-col>
+          <v-col v-if="$vuetify.display.mobile" cols="12">
+            <v-divider></v-divider>
+          </v-col>
+        </v-row>
+      </section>
+        
+        <v-row class="mt-3">
+          <v-col :cols="$vuetify.display.mobile ? 12 : 6">
+            <section id="summary-by-date">
+              <v-card variant="">
+                <v-card-title>Streszczenie- Podsumowanie Finansów</v-card-title>
+                <v-card-subtitle>Na okres:</v-card-subtitle>
+                <v-card-text>
+                  <canvas id="summaryChart" style="width:100%;max-width:700px"></canvas>
+                  <br>
+                  <v-table  id="table2" class="v-table">
+                    <thead>
+                      <tr>
+                        <th class="text-left" v-for="header in headers2" :key="header">
+                          {{ header }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="item in dataByMonth()"
+                        :key="item.date"
+                      >
+                        <td>{{ item.date }}</td>
+                        <td>{{ item.value }} </td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+                </v-card-text>
+              </v-card>
+            </section>
+          </v-col>
+          <v-col v-if="$vuetify.display.mobile" cols="12">
+            <v-divider></v-divider>
+          </v-col>
+          <v-col :cols="$vuetify.display.mobile ? 12 : 6">
+            <section id="summary-by-category">
+                <v-card variant="">
+                  <v-card-title>Wydatki- Finanse</v-card-title>
+                  <v-card-subtitle>Według Kategorii:</v-card-subtitle>
+                  <v-card-text>
+                    <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+                    <br>
+                    <v-table id="table3" class="v-table">
+                      <thead>
+                        <tr>
+                          <th class="text-left" v-for="header in headers3" :key="header">
+                            {{ header }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="item in dataByCategory()"
+                          :key="item.date"
+                        >
+                          <td>{{ item.category }}</td>
+                          <td>{{ item.value }} </td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-card-text>
+              </v-card>
+          </section>
+          </v-col>
+        </v-row>
+        
+      </v-container>
+      </v-main>
+      <v-footer class="myFooterColor text-center d-flex flex-column">
+        <br>
+        <div>
+          <v-btn
+            v-for="icon in icons"
+            :key="icon"
+            class="mx-4"
+            :icon="icon"
+            variant="text"
+          ></v-btn>
+        </div>
+        <br><br><br>
+        <div class="pt-0 text-md-h5 text-lg-h4" style="padding: 3% 30%">
+          <em> We believe that great programming and creation has the power to make everyone's life simpler and more satisfying, which makes our work a great joy. Let's create beautiful and useful content together. </em>
+        </div>
+        <v-divider></v-divider>
+        <div>
+          {{ new Date().getFullYear() }} — <strong>Sibrecht Studio Design by Linderinn</strong>
+        </div>
+      </v-footer>
+    </v-app>
+</script>
+  <script src="vue-script.js"></script>
+</body>
+
+</html>
